@@ -1,3 +1,20 @@
-/data/*
-/teacher_ckpts_L1/*
-!.gitkeep
+# data
+data/
+student_deepmet/data_*/
+teacher_deepmet/data_*/
+
+# checkpoints
+*_ckpts*/
+student_deepmet/ckpts_*/
+
+# slurm
+slurm_*.out
+slurm_*.err
+
+# python
+__pycache__/
+*.pyc
+
+# misc
+*~
+*.log

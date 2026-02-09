@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_scatter import scatter_add
 from model.dynamic_reduction_network import DynamicReductionNetwork
-from model.graph_met_network import GraphMETNetwork
+from model.graph_met_network import GraphMETNetwork, StudentGraphMETNetwork
 
 '''
 class Net(nn.Module):
@@ -47,6 +47,19 @@ class Net(nn.Module):
         relu_layer = nn.ReLU() #ReLU weights
         return relu_layer(weights)
         # return torch.sigmoid(weights) #old sigmoid weights
+
+class StudentNet(nn.Module):
+    def __init__(self, continuous_dim, categorical_dim, norm):
+        super(StudentNet, self).__init__()
+        
+        self.graphnet = StudentGraphMETNetwork(continuous_dim, categorical_dim, norm,
+                                        output_dim=1, hidden_dim=32,
+                                        conv_depth=2)
+    
+    def forward(self, x_cont, x_cat, edge_index, batch):
+        weights = self.graphnet(x_cont, x_cat, edge_index, batch)
+        return F.relu(weights)
+
 
 def loss_fn_weighted(weights, prediction, truth, batch, sample_weight=None):
     # L1 data format: [pt, px, py, eta, d0, dz, pdgid, charge]
@@ -99,7 +112,6 @@ def loss_fn_response_tune(weights, prediction, truth, batch, c = 4000, scale_mom
 
     v_true = torch.stack((true_px,true_py),dim=1)
     v_regressed = torch.stack((METx,METy),dim=1)
-    # response = getscale(v_regressed) / getscale(v_true)
     response = getdot(-v_regressed,v_true)/getdot(v_true,v_true)
 
     loss = 0.5*( (METx + true_px)**2 + (METy + true_py)**2 ).mean()
@@ -195,7 +207,7 @@ def scalermul(a,v):
 
 def u_perp_par_loss(weights, prediction, truth, batch):
     qTx=truth[:,0]#*torch.cos(truth[:,1])
-    qTy=truth[:,1]#*torch.sin(truth[:,1])
+    qTy=truth[:,0]#*torch.sin(truth[:,1])
     # truth qT
     v_qT=torch.stack((qTx,qTy),dim=1)
 
@@ -224,9 +236,8 @@ def resolution(weights, prediction, truth, batch):
     def scalermul(a,v):
         return torch.einsum('b,bi->bi',a,v)    
 
-    qTx=truth[:,0]#*torch.cos(truth[:,1])
-    qTy=truth[:,1]#*torch.sin(truth[:,1])
-    # truth qT
+    qTx=truth[:,0]
+    qTy=truth[:,1]
     v_qT=torch.stack((qTx,qTy),dim=1)
 
     # Check if we have pfMET/puppiMET (L1 data only has 2 columns)
@@ -247,12 +258,12 @@ def resolution(weights, prediction, truth, batch):
         deepMETResponse_y=truth[:,7]#*torch.sin(truth[:,7])
         # DeepMET Response Tune
         v_deepMETResponse=torch.stack((deepMETResponse_x, deepMETResponse_y),dim=1)
-
+    
         deepMETResolution_x=truth[:,8]#*torch.cos(truth[:,9])
         deepMETResolution_y=truth[:,9]#*torch.sin(truth[:,9])
         # DeepMET Resolution Tune
         v_deepMETResolution=torch.stack((deepMETResolution_x, deepMETResolution_y),dim=1)
-
+    
     # L1 data format: [pt, px, py, eta, d0, dz, pdgid, charge]
     px=prediction[:,1]
     py=prediction[:,2]

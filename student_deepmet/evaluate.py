@@ -31,7 +31,7 @@ parser.add_argument('--data', default='/hildafs/projects/phy230010p/share/NanoAO
                     help="Name of the data folder")
 parser.add_argument('--ckpts', default='ckpts_znunu',
                     help="Name of the ckpts folder")
-
+student_on = True 
 def evaluate(model, device, loss_fn, dataloader, metrics, deltaR, deltaR_dz, model_dir):
     """Evaluate the model on `num_steps` batches.
 
@@ -81,14 +81,13 @@ def evaluate(model, device, loss_fn, dataloader, metrics, deltaR, deltaR_dz, mod
             })
         
         data = data.to(device)
-        # L1 data: 6 continuous features (pt, px, py, eta, d0, dz), 2 categorical (pdgid, charge)
+        # L1 data: 6 continuous features, 2 categorical
         x_cont = data.x[:,:6]
         x_cat = torch.cat([
             data.x[:,6:7].long(),  # pdgid
             data.x[:,7:8].long(),  # charge
         ], dim=1)
         # L1 data format: [pt, px, py, eta, d0, dz, pdgid, charge]
-        # phi = atan2(py, px) = atan2(col2, col1)
         phi = torch.atan2(data.x[:,2], data.x[:,1])
         etaphi = torch.cat([data.x[:,3][:,None], phi[:,None]], dim=1)
         # NB: there is a problem right now for comparing hits at the +/- pi boundary 
@@ -149,11 +148,11 @@ def evaluate(model, device, loss_fn, dataloader, metrics, deltaR, deltaR_dz, mod
 
         for i in range(1, len(bin_edges)):
             R_i=R_arr[np.where(inds==i)[0]]
-            R_hist.append(np.mean(R_i) if len(R_i) > 0 else 0) #modified
+            R_hist.append(np.mean(R_i) if len(R_i) > 0 else 0)
             u_perp_i=u_perp_arr[np.where(inds==i)[0]]
             u_perp_scaled_i=u_perp_i/np.mean(R_i)
-            u_perp_hist.append((np.quantile(u_perp_i,0.84)-np.quantile(u_perp_i,0.16))/2. if len(u_perp_i) > 0 else 0) #modified
-            u_perp_scaled_hist.append((np.quantile(u_perp_scaled_i,0.84)-np.quantile(u_perp_scaled_i,0.16))/2. if len(u_perp_scaled_i) > 0 else 0) #modified
+            u_perp_hist.append((np.quantile(u_perp_i,0.84)-np.quantile(u_perp_i,0.16))/2. if len(u_perp_i) > 0 else 0)
+            u_perp_scaled_hist.append((np.quantile(u_perp_scaled_i,0.84)-np.quantile(u_perp_scaled_i,0.16))/2. if len(u_perp_scaled_i) > 0 else 0)
             u_par_i=u_par_arr[np.where(inds==i)[0]]
             u_par_scaled_i=u_par_i/np.mean(R_i)
             u_par_hist.append((np.quantile(u_par_i,0.84)-np.quantile(u_par_i,0.16))/2. if len(u_par_i) > 0 else 0)
@@ -197,9 +196,9 @@ if __name__ == '__main__':
     # Define the model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    norm = torch.tensor([1./scale_momentum, 1./scale_momentum, 1./scale_momentum, 1., 1., 1.,]).to(device)   # pt, px, py: scale by 128
+    norm = torch.tensor([1./scale_momentum, 1./scale_momentum, 1./scale_momentum, 1., 1., 1., 1., 1.]).to(device)   # pt, px, py: scale by 128
 
-    model = net.Net(6, 2, norm).to(device) #include puppi
+    model = net.Net(8, 3, norm).to(device) #include puppi
     #model = net.Net(7, 3).to(device) #remove puppi
     optimizer = torch.optim.AdamW(model.parameters(),lr=0.001, weight_decay=0.001)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=500, threshold=0.05)

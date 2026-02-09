@@ -50,7 +50,9 @@ def train(model, device, optimizer, scheduler, loss_fn, dataloader, epoch):
             x_cont = data.x[:,:6]
             x_cat = data.x[:,6:].long()
 
-            phi = torch.atan2(data.x[:,1], data.x[:,0])
+            # L1 data format: [pt, px, py, eta, d0, dz, pdgid, charge]
+            # phi = atan2(py, px) = atan2(col2, col1)
+            phi = torch.atan2(data.x[:,2], data.x[:,1])
             etaphi = torch.cat([data.x[:,3][:,None], phi[:,None]], dim=1)        
             edge_index = radius_graph(etaphi, r=deltaR, batch=data.batch, loop=False, max_num_neighbors=255)
             edge_index = to_undirected(edge_index)
