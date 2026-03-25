@@ -1,0 +1,13 @@
+<property object at 0x77f780eeda40>
+../data/data4L1/data_ttbar/raw
+../data/data4L1/data_ttbar/processed
+length of train/val data:  746250 248750
+device: cuda
+Traceback (most recent call last):
+  File "/home/export/xuantinl/L1deepmet_distill/vae_teacher/trainVAE.py", line 216, in <module>
+    ckpt_t  = torch.load(args.teacher_ckpt, map_location=device, weights_only=False)
+  File "/home/export/xuantinl/envs/env/lib/python3.9/site-packages/torch/serialization.py", line 712, in load
+    return _load(opened_zipfile, map_location, pickle_module, **pickle_load_args)
+  File "/home/export/xuantinl/envs/env/lib/python3.9/site-packages/torch/serialization.py", line 1047, in _load
+    unpickler = UnpicklerWrapper(data_file, **pickle_load_args)
+TypeError: 'weights_only' is an invalid keyword argument for Unpickler()
