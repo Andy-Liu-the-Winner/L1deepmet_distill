@@ -10,6 +10,8 @@ student_deepmet/ckpts_*/
 # slurm
 slurm_*.out
 slurm_*.err
+slurm-*.out
+slurm-*.err
 
 # python
 __pycache__/
@@ -18,3 +20,4 @@ __pycache__/
 # misc
 *~
 *.log
+.DS_Store
