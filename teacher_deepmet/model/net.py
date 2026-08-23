@@ -186,6 +186,47 @@ def loss_fn(weights, prediction, truth, batch, scale_momentum = 128.):
     return loss
 
 
+def loss_fn_huber_response(w, s, x_pad, mask, y, sigma0=30.0, lam=5.0, qt_thresh=50.0):
+    """Redesigned-teacher loss (shared by ParT and GraphNet; see teacher_ParT_DESIGN.md §2): Huber on normalized MET residuals
+    + lam * per-event-mean |response - 1| over events with qT > qt_thresh.
+
+    w: (B, N) per-particle weights (zero on padding); s: (B,) calibration scalar;
+    x_pad: (B, N, 8) raw features [pt, px, py, eta, phi, puppi, pdgid, charge];
+    y: (B, 2) (genMETx, genMETy). Same sign convention as v1: MET = Sigma w*p ~ -genMET.
+
+    Returns (loss, res_term, resp_term) — the components are detached, for logging.
+    """
+    px = x_pad[..., 1]
+    py = x_pad[..., 2]
+    METx = s * (w * px).sum(dim=1)
+    METy = s * (w * py).sum(dim=1)
+    true_px, true_py = y[:, 0], y[:, 1]
+
+    rx = (METx + true_px) / sigma0
+    ry = (METy + true_py) / sigma0
+    # smooth_l1(beta=1) == huber(delta=1)
+    res_term = (F.smooth_l1_loss(rx, torch.zeros_like(rx), reduction='none')
+                + F.smooth_l1_loss(ry, torch.zeros_like(ry), reduction='none')).mean()
+
+    qt2 = true_px ** 2 + true_py ** 2
+    response = -(METx * true_px + METy * true_py) / qt2.clamp(min=1e-6)
+    # equal weight per qT bin: an event-level mean is dominated by the steeply falling
+    # qT spectrum and lets high-qT response sag (run 1: R=0.99 at 50 GeV, 0.75 at 200)
+    qt = qt2.sqrt()
+    bin_terms = []
+    for lo, hi in ((qt_thresh, 100.), (100., 200.), (200., 300.), (300., 1e9)):
+        sel = (qt > lo) & (qt <= hi)
+        if sel.any():
+            bin_terms.append((response[sel] - 1.0).abs().mean())
+    if bin_terms:
+        resp_term = torch.stack(bin_terms).mean()
+    else:
+        resp_term = torch.zeros((), device=w.device)
+
+    loss = res_term + lam * resp_term
+    return loss, res_term.detach(), resp_term.detach()
+
+
 def getdot(vx, vy):
     return torch.einsum('bi,bi->b',vx,vy)
 def getscale(vx):
