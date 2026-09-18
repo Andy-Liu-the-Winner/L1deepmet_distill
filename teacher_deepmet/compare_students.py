@@ -21,7 +21,7 @@ parser.add_argument('--output', default='../student_comparison_results')
 
 ENTRIES = [
     ('PUPPI baseline',            '../teacher_ckpts_ParT_r2/puppi_baseline.resolutions', 'tab:gray',   '--', 1.5),
-    ('Teacher v1 (173k)',         '../teacher_ckpts_L1_fixed/best.resolutions',          'tab:blue',   '-',  1.5),
+    ('Teacher v1 (6.4k)',         '../teacher_ckpts_L1_fixed/best.resolutions',          'tab:blue',   '-',  1.5),
     ('Student scratch (6.4k)',    '../student_ckpts_scratch_r1/best.resolutions',        'tab:orange', '--', 2.0),
     ('Student distilled (6.4k)',  '../student_ckpts_distill_ParT_r1/best.resolutions',   'tab:purple', '-',  2.5),
     ('Teacher ParT (138k, ideal)','../teacher_ckpts_ParT_r2/best.resolutions',           'tab:red',    '-',  2.0),
