@@ -318,9 +318,12 @@ Five details that matter if you modify this:
    with the padding bucket size and make it batch-composition dependent.
 3. **The teacher is fully frozen** (`eval()` + `requires_grad_(False)`) and loaded from
    the EMA `state_dict`.
-4. **β = 20** sets the distillation term to roughly 5 % of the total loss at convergence
-   (task ≈ 5.85, β·distill ≈ 4.6 at epoch 30 — see `student_ckpts_distill_ParT_r1/loss.log`,
-   which logs `train_task` and `train_distill` separately for exactly this reason).
+4. **β = 20 is a strong pull, not a nudge.** At epoch 30 the training loss is
+   `task 5.85 + 20 × 0.2287 = 10.42`, so the distillation term is **44 % of the total
+   loss** — the student really was pushed hard toward the teacher, which is why the null
+   result in §7.2 is informative rather than a sign of an under-weighted term.
+   `student_ckpts_distill_ParT_r1/loss.log` logs `train_task` and `train_distill`
+   separately for exactly this check.
 5. **The scratch baseline is the same script** with `--teacher_ckpt ''` — identical
    architecture, loss, schedule, seed and data order. This is what makes the comparison
    in §7.2 a clean A/B rather than a comparison against a differently-trained model.
@@ -398,9 +401,9 @@ In priority order.
    the loss, the residual-on-PUPPI head, the seam fix and the training recipe, **not**
    from distillation.
 2. **Give the student a cheap global feature.** This is the highest-value open move.
-   Gap recovery along PUPPI → ParT is ~96 %/71 % on u⊥ but only **39 %** on u∥ at
-   50–150 GeV, and GraphNet's global exchange node recovered 57 % of that same gap — so
-   the mechanism is confirmed, not speculative. An event-level scalar context (sum-pT,
+   The scratch student already closes 94 %/72 % of the PUPPI → ParT gap on u⊥, but only
+   **38 %** on u∥ at 50–150 GeV. GraphNet's global exchange node recovered 57 % of that
+   same u∥ gap — so the mechanism is confirmed, not speculative. An event-level scalar context (sum-pT,
    multiplicity) broadcast to every node, or an s-head equivalent, is the cheapest FPGA-
    compatible version. Check with the FPGA/FlowGNN side what a broadcast scalar costs
    before designing around it.
