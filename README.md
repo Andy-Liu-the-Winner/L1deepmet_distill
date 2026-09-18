@@ -8,7 +8,8 @@ the quality ceiling and a small student carries the hardware constraints.
 > **Start here: [`DISTILLATION.md`](DISTILLATION.md)** — the handoff document. It covers
 > the architectures (including the ParT transformer teacher), the distillation
 > implementation, all results, reproduction commands, open threads and known dead ends.
-> This README is only an entry point.
+> [`KD_READING_LIST.md`](KD_READING_LIST.md) is the annotated distillation bibliography
+> that goes with it. This README is only an entry point.
 
 ## Current state (2026-09-18)
 

@@ -411,6 +411,10 @@ In priority order.
    GraphNet teacher's global node, not on output weights. §7.3 says output-weight matching
    is saturated; the untested hypothesis is that the *global context vector* is the
    transferable object. GraphNet was kept in the repo for exactly this.
+   **[`KD_READING_LIST.md`](KD_READING_LIST.md) is the annotated bibliography for this
+   step** — foundations, middle-layer methods, the regression-specific tricks our current
+   loss is missing, GNN- and cross-architecture-specific work, and the two HEP precedents
+   worth benchmarking against.
 4. **Evaluate on the real goal metric.** Everything so far is resolution/response. Nobody
    has yet produced MET trigger turn-on curves at fixed rate, which is the number the
    collaboration actually cares about.
