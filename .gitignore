@@ -21,3 +21,7 @@ __pycache__/
 *~
 *.log
 .DS_Store
+
+# editor backups
+*~
+*.swp
